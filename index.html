@@ -607,21 +607,19 @@
 
   <div class="hero">
     <h1>Statistical &amp; Jurisdictional LUC Emission Factors</h1>
-    <p class="lead">Extract land use change (LUC) emission factors and land-occupation yields from the WRI Global
-      Cropland Scope-3 Carbon (GCSC) database. Search by commodity, country, and sub-region — for statistical sLUC
-      (global/national/subnational) and jurisdictional jdLUC (oil palm, soy, cocoa) datasets — and apply co-product /
-      by-product allocation where available.</p>
   </div>
 
   <section id="extractor" class="visible">
     <h2><span class="num">01</span>Emission Factor Extractor</h2>
     <p><strong>How to use this tool</strong> — Follow the steps top-to-bottom: <span class="badge teal">1</span> pick a
       <em>commodity</em>, <span class="badge teal">2</span> choose a <em>traceability level</em> (municipality →
-      state/province → national, in that order of preference, or global world average), <span class="badge teal">3</span>
+      state/province → national, in that order of preference, or global world average), <span
+        class="badge teal">3</span>
       select <em>country</em> and <em>sub-region</em> (auto-set to World at the global level), <span
         class="badge teal">4</span> set <em>reporting year</em> and <em>gas</em> (CO2e only for global averages), <span
         class="badge teal">5</span> apply <em>co-product allocation</em> if shown, then <span
-        class="badge teal">6</span> extract.</p>
+        class="badge teal">6</span> extract.
+    </p>
     <div class="card" style="margin-top:16px">
       <strong style="color:var(--accent)">Choosing between sLUC and jdLUC</strong>
       <p style="margin-top:8px">For <strong>oil palm, soy, and cocoa</strong>, a jurisdictional direct land-use-change
@@ -629,13 +627,15 @@
         emissions attributed to the commodity <em>within that specific jurisdiction</em>, which can be more
         representative than a statistical average when your sourcing area is known. When both are available for the
         selected geography, a <strong>LUC Method</strong> selector appears — pick <strong>sLUC</strong> (statistical) or
-        <strong>jdLUC</strong> (jurisdictional) as appropriate for your supply chain.</p>
+        <strong>jdLUC</strong> (jurisdictional) as appropriate for your supply chain.
+      </p>
       <ul style="color:var(--muted);font-size:14px;padding-left:20px;margin-top:8px">
         <li><strong>jdLUC is available for:</strong> Oil palm in ~36 countries (Indonesia, Malaysia, Brazil, Colombia,
           Nigeria, Ghana, Côte d'Ivoire, PNG, and more); Soy in Argentina, Bolivia, Brazil, Paraguay, Uruguay; Cocoa in
           Côte d'Ivoire &amp; Ghana.</li>
         <li>If no LUC Method selector appears, jdLUC is not available for that commodity/geography and the tool uses the
-          <strong>statistical sLUC</strong> emission factor.</li>
+          <strong>statistical sLUC</strong> emission factor.
+        </li>
         <li>Check the "Method" tag on the result — it confirms whether jdLUC or sLUC was used. See the Decision Tree
           below for method-selection guidance.</li>
       </ul>
@@ -1290,7 +1290,7 @@
     function toggleTheme() {
       const h = document.documentElement;
       const cur = h.getAttribute('data-theme');
-      h.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+      h.setAttribute('data-theme', cur === 'light' ? 'dark' : 'light');
     }
 
     /* particles */
