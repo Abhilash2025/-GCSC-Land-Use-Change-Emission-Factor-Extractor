@@ -6,7 +6,7 @@ A single-file static webapp that extracts **statistical land use change (sLUC)**
 
 Pulled from [github.com/wri/GCSC](https://github.com/wri/GCSC) (Fitts et al., 2025):
 
-- **sLUC emission factors** — 42 agricultural crops, global / ADM0 / ADM1 / ADM2 (municipality), reporting years 2020–2024, per gas (CO2e, CO2, CH4, N2O).
+- **sLUC emission factors** — 42 agricultural crops, global / ADM0 / ADM1 / ADM2 (municipality), reporting years 2020–2024, per gas (CO2e, CO2, CH4, N2O). Note: the global level provides CO2e only (the source repository publishes a single `global_CO2e.csv` for world averages).
 - **jdLUC emission factors** — oil palm, soy, cocoa at ADM0/ADM1/ADM2.
 - **Co-product allocation tables** — oil palm, soy, cocoa co-products with allocation ratios & functional units.
 - **GADM admin keys** — country (ADM0), state/province (ADM1), municipality (ADM2) names.
@@ -15,7 +15,7 @@ Pulled from [github.com/wri/GCSC](https://github.com/wri/GCSC) (Fitts et al., 20
 ## How to use
 
 1. Select a **commodity**.
-2. Choose **traceability level** — Municipality (Admin 2) → Sub-national (Admin 1) → National (Admin 0), finest-first.
+2. Choose **traceability level** — Municipality (Admin 2) → Sub-national (Admin 1) → National (Admin 0), finest-first, or **Global (world average)** for CO2e world-average factors.
 3. Select **country**, then **state / province**, and for municipality level a **municipality / county**.
 4. Pick **reporting year** and **gas**.
 5. If the commodity has co-products (oil palm, soy, cocoa), select the **co-product** — the raw crop EF is multiplied by its allocation ratio.

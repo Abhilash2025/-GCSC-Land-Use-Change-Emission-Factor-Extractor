@@ -23,6 +23,7 @@
   <script src="data/sLUC/adm0_CO2.js"></script>
   <script src="data/sLUC/adm0_CO2e.js"></script>
   <script src="data/sLUC/adm0_N2O.js"></script>
+  <script src="data/sLUC/global_CO2e.js"></script>
   <script src="data/sLUC/adm1_CH4.js"></script>
   <script src="data/sLUC/adm1_CO2.js"></script>
   <script src="data/sLUC/adm1_CO2e.js"></script>
@@ -616,8 +617,9 @@
     <h2><span class="num">01</span>Emission Factor Extractor</h2>
     <p><strong>How to use this tool</strong> — Follow the steps top-to-bottom: <span class="badge teal">1</span> pick a
       <em>commodity</em>, <span class="badge teal">2</span> choose a <em>traceability level</em> (municipality →
-      state/province → national, in that order of preference), <span class="badge teal">3</span> select <em>country</em>
-      and <em>sub-region</em>, <span class="badge teal">4</span> set <em>reporting year</em> and <em>gas</em>, <span
+      state/province → national, in that order of preference, or global world average), <span class="badge teal">3</span>
+      select <em>country</em> and <em>sub-region</em> (auto-set to World at the global level), <span
+        class="badge teal">4</span> set <em>reporting year</em> and <em>gas</em> (CO2e only for global averages), <span
         class="badge teal">5</span> apply <em>co-product allocation</em> if shown, then <span
         class="badge teal">6</span> extract.</p>
     <div class="card" style="margin-top:16px">
@@ -668,6 +670,7 @@
             <option value="admin2">Municipality (Admin 2 — county)</option>
             <option value="admin1">Sub-national (Admin 1 — state/province)</option>
             <option value="admin0">National (Admin 0 — country)</option>
+            <option value="global">Global (world average)</option>
           </select></div>
       </div>
     </div>
@@ -820,7 +823,7 @@
     const STATE = {
       index: null,
       commodities: [],
-      sLUCadm0: {}, sLUCadm1: {}, sLUCadm2: {},   // gas -> rows
+      sLUCadm0: {}, sLUCadm1: {}, sLUCadm2: {}, sLUCglobal: {},   // gas -> rows
       jdLUC: {},
       coProducts: {},
       gadm0: [], gadm1: [], gadm2: [],
@@ -905,12 +908,24 @@
       $('coProductBlock').style.display = showCo ? 'block' : 'none';
       populateCountries();
       checkMethodAvailability();
+      checkGlobalGas();
       clearResult();
+    }
+
+    function checkGlobalGas() {
+      // The global sLUC dataset provides CO2e only; lock the gas dropdown when Global is selected.
+      const gasSel = $('gas');
+      if (STATE.sel.trace === 'global') {
+        gasSel.value = 'CO2e'; STATE.sel.gas = 'CO2e';
+        gasSel.disabled = true;
+      } else {
+        gasSel.disabled = false;
+      }
     }
 
     function populateTrace() {
       STATE.sel.trace = $('traceLevel').value; // sync with initial dropdown value
-      $('traceLevel').onchange = () => { STATE.sel.trace = $('traceLevel').value; populateCountries(); checkMethodAvailability(); clearResult(); };
+      $('traceLevel').onchange = () => { STATE.sel.trace = $('traceLevel').value; populateCountries(); checkMethodAvailability(); checkGlobalGas(); clearResult(); };
     }
     function populateCountries() {
       const sel = $('country');
@@ -919,6 +934,16 @@
         return;
       }
       sel.disabled = false;
+      if (STATE.sel.trace === 'global') {
+        sel.innerHTML = '<option value="WORLD">World (global average)</option>';
+        sel.disabled = true;
+        STATE.sel.country = 'WORLD';
+        populateRegions();
+        loadCoProducts();
+        checkMethodAvailability();
+        return;
+      }
+      STATE.sel.country = null;
       const opts = STATE.gadm0
         .map(r => `<option value="${r[0]}">${r[3]} (${r[0]})</option>`)
         .sort((a, b) => a.replace(/<[^>]+>/g, '').localeCompare(b.replace(/<[^>]+>/g, ''), 'en', { sensitivity: 'base' }));
@@ -985,6 +1010,7 @@
       if (!code || !JD_CROPS.includes(code) || !STATE.sel.country) {
         row.innerHTML = ''; STATE.sel.method = 'sLUC'; block.style.display = 'none'; return;
       }
+      if (STATE.sel.trace === 'global') { row.innerHTML = ''; STATE.sel.method = 'sLUC'; block.style.display = 'none'; return; } // jdLUC is jurisdiction-specific
       if (STATE.sel.trace !== 'admin0' && !STATE.sel.region) { row.innerHTML = ''; STATE.sel.method = 'sLUC'; block.style.display = 'none'; return; }
       if (STATE.sel.trace === 'admin2' && !STATE.sel.municipality) { row.innerHTML = ''; STATE.sel.method = 'sLUC'; block.style.display = 'none'; return; }
       let jdRows = null;
@@ -1033,7 +1059,9 @@
         }
         const country = STATE.sel.country;
         let rows = data;
-        if (lvl === 'admin0') rows = data.filter(r => r.g0 === country);
+        if (STATE.sel.trace === 'global') {
+          rows = data; // co-product ratios are geography-independent; dedupe below
+        } else if (lvl === 'admin0') rows = data.filter(r => r.g0 === country);
         else if (lvl === 'admin1') rows = data.filter(r => r.g0 === country && r.g1 === STATE.sel.region);
         else rows = data.filter(r => r.g0 === country && r.g1 === STATE.sel.region && r.g2 === STATE.sel.municipality);
         // unique co-products for this geography
@@ -1061,6 +1089,10 @@
       const code = STATE.sel.commodity;
       const gas = STATE.sel.gas;
       const lvl = STATE.sel.trace;
+      if (lvl === 'global') {
+        if (!STATE.sLUCglobal[gas]) STATE.sLUCglobal[gas] = await loadData(STATE.index.sLUC.global);
+        return STATE.sLUCglobal[gas].filter(r => r.c === code);
+      }
       const key = `sLUC/adm${lvl === 'admin0' ? '0' : (lvl === 'admin1' ? '1' : '2')}_${gas}.json`;
       if (lvl === 'admin0' && !STATE.sLUCadm0[gas]) STATE.sLUCadm0[gas] = await loadData(STATE.index.sLUC[gas].admin0);
       if (lvl === 'admin1' && !STATE.sLUCadm1[gas]) STATE.sLUCadm1[gas] = await loadData(STATE.index.sLUC[gas].admin1);
@@ -1079,6 +1111,7 @@
       const gas = STATE.sel.gas, year = STATE.sel.year;
       if (!code) { showError('Please select a commodity.'); return; }
       if (!country) { showError('Please select a country.'); return; }
+      if (STATE.sel.trace === 'global' && gas !== 'CO2e') { showError('The global sLUC dataset provides CO2e only. Select the CO2e gas for global averages.'); return; }
       if ((STATE.sel.trace === 'admin1' || STATE.sel.trace === 'admin2') && !STATE.sel.region) { showError('Please select a state / province.'); return; }
       if (STATE.sel.trace === 'admin2' && !STATE.sel.municipality) { showError('Please select a municipality / county.'); return; }
 
@@ -1137,7 +1170,8 @@
           let data = STATE.coProducts[key];
           if (!data) { data = await loadData(key); STATE.coProducts[key] = data; }
           let rows2;
-          if (STATE.sel.trace === 'admin0') rows2 = data.filter(r => r.g0 === country);
+          if (STATE.sel.trace === 'global') rows2 = data;
+          else if (STATE.sel.trace === 'admin0') rows2 = data.filter(r => r.g0 === country);
           else if (STATE.sel.trace === 'admin1') rows2 = data.filter(r => r.g0 === country && r.g1 === STATE.sel.region);
           else rows2 = data.filter(r => r.g0 === country && r.g1 === STATE.sel.region && r.g2 === STATE.sel.municipality);
           const cp = rows2.find(r => r.co_product === STATE.sel.coProduct);
@@ -1163,11 +1197,13 @@
         const qtyVal = isNaN(qty) || qty < 0 ? 0 : qty;
         const totalEmissions = effFinal * qtyVal;
 
-        const traceLabel = STATE.sel.trace === 'admin0' ? 'National (Admin 0)'
-          : (STATE.sel.trace === 'admin1' ? 'Sub-national (Admin 1)' : 'Municipality (Admin 2)');
-        const regionLabel = STATE.sel.trace === 'admin0' ? 'Whole country'
-          : (STATE.sel.trace === 'admin1' ? regionName(STATE.sel.region)
-            : regionName(STATE.sel.region) + ' · ' + municipalityName(STATE.sel.municipality));
+        const traceLabel = STATE.sel.trace === 'global' ? 'Global (world average)'
+          : (STATE.sel.trace === 'admin0' ? 'National (Admin 0)'
+            : (STATE.sel.trace === 'admin1' ? 'Sub-national (Admin 1)' : 'Municipality (Admin 2)'));
+        const regionLabel = STATE.sel.trace === 'global' ? 'World'
+          : (STATE.sel.trace === 'admin0' ? 'Whole country'
+            : (STATE.sel.trace === 'admin1' ? regionName(STATE.sel.region)
+              : regionName(STATE.sel.region) + ' · ' + municipalityName(STATE.sel.municipality)));
 
         renderResult({
           commodity: code, commodityName: commodityName(code),
