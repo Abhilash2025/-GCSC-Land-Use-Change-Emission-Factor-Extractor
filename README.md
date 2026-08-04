@@ -34,6 +34,10 @@ deploy/
 └── data/           # JS data bundles (index.js + sLUC/jdLUC/co/gadm/yield)
 ```
 
+## Deploy
+
+Drag the `deploy/` folder to [Netlify Drop](https://app.netlify.com/drop) or serve with any static host. No build step, zero external dependencies. Note: opening `index.html` directly via double-click (file://) works — all data is loaded via static `<script>` tags.
+
 ## Disclaimer
 
 This is a simplified analysis and does not capture all nuances of the standards or methodologies. Emission factors are reproduced as-is from the source database. This tool does not constitute emissions accounting advice. Always refer to the actual source documents and the GHG Protocol Land Sector and Removals Standard for authoritative guidance.
